@@ -25,4 +25,14 @@ router.post("/", async (req, res) => {
 	}
 });
 
+router.get('/list', (req, res) => {
+	 
+	User.find({}).then((users) => {
+		//doing stuff with the user array
+		// console.log(users);
+		res.json(users)
+	});
+
+  });
+
 module.exports = router;
