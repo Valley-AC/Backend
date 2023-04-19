@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
 const fileSchema = new mongoose.Schema({
-    name: String,
-    contentType: String,
-    data: Buffer,
+    image: String,
+   
 });
 
 const File = mongoose.model("file", fileSchema);

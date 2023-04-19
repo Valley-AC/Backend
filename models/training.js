@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 let trainingSchema = mongoose.Schema({
     title: String,
-    image: String,
     description: String,
     category: String,
-    price:Number
+    price:Number,
+    imageUrl: String
+
 
   });
   const Training = mongoose.model("training", trainingSchema);

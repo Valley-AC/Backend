@@ -1,56 +1,95 @@
 const router = require("express").Router();
 const  Training  = require("../models/training");
-const  File  = require("../models/file");
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const multer  = require('multer')
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
 
-router.post('/add', (req, res) => {
-    const{
-        title,
-        image,
-        description,
-        category,
-        price
-    }=req.body;
-   console.log(req.body)
-    const training = new Training({
-        title:title,
-        image:image,
-        description:description,
-        category:category,
-        price:price
-    });
-   
-    training.save().then(training=>res.json(training))
+const upload = multer({ storage: storage });
 
 
-  });
 
-router.get('/list', (req, res) => {
-   
+
+router.post("/upload", upload.single("image"), (req, res) => {
  
-    const training = Training.find()
-    .then(trainings=>res.status(200).json(trainings))
-    .catch(error=>{res.status(500).json(error)})
 
+  try {
+           const title = req.body.title
+           const description = req.body.description
+           const category = req.body.category
+           const price = req.body.price
+           const imageUrl = req.file.path
+           const training = new Training({ title:title, description:description,category:category,price:price,imageUrl:imageUrl });
+            training.save();
+         res.status(201).json(training);
+        
+       } catch (error) {
+         console.error(error);
+         res.status(500).json({ message: 'Internal server error' });
+       }
+});
+
+// Get all trainings 
+router.get('/', async (req, res) => {
+  try {
+    const trainings = await Training.find();
+    res.json(trainings);
     
-  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
-router.post('/upload', upload.array('avatar', 10), (req, res) => {
-    const files = req.files.map(file => ({
-      name: file.originalname,
-      contentType: file.mimetype,
-      data: file.buffer,
-    }));
-  
-    File.insertMany(files, (error) => {
-      if (error) {
-        console.log(error);
-        res.sendStatus(500);
-      } else {
-        res.json({ message: 'Files uploaded successfully' });
-      }
-    });
-  });
+// Get a single training  by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const training = await Training.findById(req.params.id);
+    if (!training) {
+      return res.status(404).json({ message: 'training post not found' });
+    }
+    res.json(training);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update a training  by ID
+router.put('/:id', upload.array('images', 10), async (req, res) => {
+  try {
+    const {title, description,category,price } = req.body;
+    const images = req.files?.map(file => file.path);
+    const training = await Training.findByIdAndUpdate(req.params.id, { title, description,category,price, images }, { new: true });
+    if (!training) {
+      return res.status(404).json({ message: 'Training post not found' });
+    }
+    res.json(training);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Delete a training  by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const training = await Training.findByIdAndDelete(req.params.id);
+    if (!training) {
+      return res.status(404).json({ message: 'Training post not found' });
+    }
+    res.sendStatus(204);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 module.exports = router;
+
+
