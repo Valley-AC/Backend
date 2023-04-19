@@ -61,11 +61,12 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update a training  by ID
-router.put('/:id', upload.array('images', 10), async (req, res) => {
+router.put('/:id', upload.single("image"), async (req, res) => {
   try {
     const {title, description,category,price } = req.body;
-    const images = req.files?.map(file => file.path);
-    const training = await Training.findByIdAndUpdate(req.params.id, { title, description,category,price, images }, { new: true });
+    const imageUrl = req.file.path
+
+    const training = await Training.findByIdAndUpdate(req.params.id, { title, description,category,price, imageUrl:imageUrl }, { new: true });
     if (!training) {
       return res.status(404).json({ message: 'Training post not found' });
     }
